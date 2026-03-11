@@ -8,7 +8,7 @@ from typing import List
 import os
 
 from app.db.database import create_db_and_tables, get_session, engine
-from app.models.models import User, UserRole, UserBase, Project, Task, TaskStatus
+from app.models.models import User, UserRole, UserBase, UserRead, Project, Task, TaskStatus
 from app.core.auth import verify_password, get_password_hash, create_access_token
 from app.api.deps import get_current_user
 
@@ -77,7 +77,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return {"access_token": access_token, "token_type": "bearer", "role": user.role}
 
-@app.get("/users/me", response_model=UserBase)
+@app.get("/users/me", response_model=UserRead)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
