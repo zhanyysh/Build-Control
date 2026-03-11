@@ -55,3 +55,16 @@ def update_task_status(task_id: int, status: TaskStatus, current_user: User = De
     session.commit()
     session.refresh(task)
     return task
+
+@router.delete("/{task_id}")
+def delete_task(task_id: int, current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.FOREMAN]:
+        raise HTTPException(status_code=403, detail="Only administrators and foremen can delete tasks")
+    
+    task = session.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    session.delete(task)
+    session.commit()
+    return {"message": "Task deleted successfully"}

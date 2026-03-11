@@ -1,13 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar/Navbar";
 import styles from "./dashboard.module.css";
-import { Plus, Building2, CheckCircle2, ListTodo, Package } from "lucide-react";
+import { Plus, Building2, CheckCircle2, ListTodo, Package, Trash2 } from "lucide-react";
 import Link from "next/link";
 import FormattedDate from "@/components/FormattedDate";
+import { toast } from "react-hot-toast";
 
 interface Stats {
   project_count: number;
@@ -27,6 +28,7 @@ interface Project {
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
     queryKey: ["stats"],
@@ -38,6 +40,18 @@ export default function DashboardPage() {
     queryKey: ["projects"],
     queryFn: () => api.get("/projects/").then((res) => res.data),
     enabled: !!user,
+  });
+
+  const deleteProject = useMutation({
+    mutationFn: (projectId: number) => api.delete(`/projects/${projectId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      toast.success("Project deleted");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to delete project");
+    }
   });
 
   if (authLoading || statsLoading || projectsLoading) {
@@ -104,18 +118,32 @@ export default function DashboardPage() {
           <h2 className={styles.sectionTitle}>Active Projects</h2>
           <div className={styles.projectGrid}>
             {projects?.map((project) => (
-              <Link 
-                key={project.id} 
-                href={`/dashboard/projects/${project.id}`}
-                className={styles.projectCard}
-              >
-                <h3 className={styles.projectName}>{project.name}</h3>
-                <p className={styles.projectAddress}>{project.address}</p>
-                <div className={styles.projectDates}>
-                  <span>Starts: <FormattedDate date={project.start_date} /></span>
-                  <span>Ends: <FormattedDate date={project.end_date} /></span>
-                </div>
-              </Link>
+              <div key={project.id} className={styles.projectCardWrapper}>
+                <Link 
+                  href={`/dashboard/projects/${project.id}`}
+                  className={styles.projectCard}
+                >
+                  <h3 className={styles.projectName}>{project.name}</h3>
+                  <p className={styles.projectAddress}>{project.address}</p>
+                  <div className={styles.projectDates}>
+                    <span>Starts: <FormattedDate date={project.start_date} /></span>
+                    <span>Ends: <FormattedDate date={project.end_date} /></span>
+                  </div>
+                </Link>
+                {user.role === "Administrator" && (
+                  <button 
+                    className={styles.deleteProjectBtn}
+                    onClick={() => {
+                      if (confirm(`Delete project "${project.name}"? This action cannot be undone.`)) {
+                        deleteProject.mutate(project.id);
+                      }
+                    }}
+                    title="Delete Project"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
             ))}
             {projects?.length === 0 && (
               <div className={styles.emptyState}>

@@ -6,19 +6,18 @@ import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import Navbar from "@/components/Navbar/Navbar";
 import styles from "./new-project.module.css";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 export default function NewProjectPage() {
   const { user } = useAuth();
   const router = useRouter();
-  
+
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (user && user.role !== "Administrator") {
@@ -28,8 +27,8 @@ export default function NewProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    const loadingToast = toast.loading("Creating project...");
 
     try {
       await api.post("/projects/", {
@@ -39,9 +38,10 @@ export default function NewProjectPage() {
         end_date: endDate,
         description
       });
+      toast.success("Project created!", { id: loadingToast });
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to create project");
+      toast.error(err.response?.data?.detail || "Failed to create project", { id: loadingToast });
     } finally {
       setLoading(false);
     }
@@ -55,13 +55,13 @@ export default function NewProjectPage() {
           <ArrowLeft size={20} />
           <span>Back to Dashboard</span>
         </Link>
-        
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <h1 className={styles.title}>Create New Project</h1>
-          
-          {error && <p className={styles.error}>{error}</p>}
-          
+
           <div className={styles.inputGroup}>
+...
+
             <label htmlFor="name">Project Name</label>
             <input
               type="text"

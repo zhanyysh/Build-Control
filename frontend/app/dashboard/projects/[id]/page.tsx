@@ -16,10 +16,13 @@ import {
   Circle,
   Package,
   Camera,
+  X,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import FormattedDate from "@/components/FormattedDate";
+import { toast } from "react-hot-toast";
 
 interface Task {
   id: number;
@@ -52,6 +55,14 @@ interface User {
   role: string;
 }
 
+interface PhotoReport {
+  id: number;
+  comment?: string;
+  file_path: string;
+  upload_date: string;
+  task_id: number;
+}
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -60,7 +71,12 @@ export default function ProjectDetailPage() {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showMaterialForm, setShowMaterialForm] = useState(false);
   const [uploadingTaskId, setUploadingTaskId] = useState<number | null>(null);
+  const [viewingPhotosTaskId, setViewingPhotosTaskId] = useState<number | null>(null);
   
+  // Material Deduction Modal State
+  const [deductingMaterial, setDeductingMaterial] = useState<Material | null>(null);
+  const [deductionAmount, setDeductionAmount] = useState("");
+
   // Form states
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
@@ -79,43 +95,6 @@ export default function ProjectDetailPage() {
     enabled: user?.role === "Administrator" || user?.role === "Foreman",
   });
 
-  // Mutations
-  const addTask = useMutation({
-    mutationFn: (data: any) => api.post("/tasks/", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
-      setShowTaskForm(false);
-      setTaskTitle("");
-      setTaskDesc("");
-      setTaskDeadline("");
-      setTaskWorkerId("");
-    }
-  });
-
-  const addMaterial = useMutation({
-    mutationFn: (data: any) => api.post("/materials/", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["materials", id] });
-      setShowMaterialForm(false);
-      setMaterialName("");
-      setMaterialQty("");
-      setMaterialUnit("");
-    }
-  });
-
-  const uploadPhoto = useMutation({
-    mutationFn: (formData: FormData) => 
-      api.post("/photos/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      }),
-    onSuccess: () => {
-      setUploadingTaskId(null);
-      setPhotoComment("");
-      setSelectedFile(null);
-      alert("Photo uploaded successfully!");
-    }
-  });
-
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
     queryKey: ["project", id],
     queryFn: () => api.get(`/projects/${id}`).then((res) => res.data),
@@ -131,13 +110,96 @@ export default function ProjectDetailPage() {
     queryFn: () => api.get(`/materials/?project_id=${id}`).then((res) => res.data),
   });
 
+  const { data: currentTaskPhotos } = useQuery<PhotoReport[]>({
+    queryKey: ["photos", viewingPhotosTaskId],
+    queryFn: () => api.get(`/photos/${viewingPhotosTaskId}`).then((res) => res.data),
+    enabled: !!viewingPhotosTaskId,
+  });
+
   // Mutations
+  const addTask = useMutation({
+    mutationFn: (data: any) => api.post("/tasks/", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
+      setShowTaskForm(false);
+      setTaskTitle("");
+      setTaskDesc("");
+      setTaskDeadline("");
+      setTaskWorkerId("");
+      toast.success("Task added successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to add task");
+    }
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: (taskId: number) => api.delete(`/tasks/${taskId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", id] });
+      toast.success("Task deleted");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to delete task");
+    }
+  });
+
+  const addMaterial = useMutation({
+    mutationFn: (data: any) => api.post("/materials/", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["materials", id] });
+      setShowMaterialForm(false);
+      setMaterialName("");
+      setMaterialQty("");
+      setMaterialUnit("");
+      toast.success("Material added to inventory");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to add material");
+    }
+  });
+
+  const deductMaterial = useMutation({
+    mutationFn: ({ materialId, amount }: { materialId: number; amount: number }) => 
+      api.post(`/materials/${materialId}/deduct?amount=${amount}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["materials", id] });
+      setDeductingMaterial(null);
+      setDeductionAmount("");
+      toast.success("Material quantity updated");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to deduct material");
+    }
+  });
+
+  const uploadPhoto = useMutation({
+    mutationFn: (formData: FormData) => 
+      api.post("/photos/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      }),
+    onSuccess: () => {
+      setUploadingTaskId(null);
+      setPhotoComment("");
+      setSelectedFile(null);
+      queryClient.invalidateQueries({ queryKey: ["photos", uploadingTaskId] });
+      toast.success("Photo uploaded successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to upload photo");
+    }
+  });
+
   const updateTaskStatus = useMutation({
     mutationFn: ({ taskId, status }: { taskId: number; status: string }) => 
       api.patch(`/tasks/${taskId}?status=${status}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", id] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+      toast.success("Task status updated");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to update status");
     }
   });
 
@@ -146,6 +208,8 @@ export default function ProjectDetailPage() {
   }
 
   if (!project) return <div>Project not found</div>;
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   return (
     <main className={styles.main}>
@@ -279,6 +343,13 @@ export default function ProjectDetailPage() {
                     </div>
                     
                     <div className={styles.taskActions}>
+                      <button 
+                        className={`${styles.viewPhotosBtn} ${viewingPhotosTaskId === task.id ? styles.activePhotosBtn : ""}`}
+                        onClick={() => setViewingPhotosTaskId(viewingPhotosTaskId === task.id ? null : task.id)}
+                      >
+                        View Proof
+                      </button>
+                      
                       {task.status !== "Completed" && (
                         <select 
                           className={styles.statusSelect}
@@ -297,8 +368,43 @@ export default function ProjectDetailPage() {
                       >
                         <Camera size={18} />
                       </button>
+                      
+                      {(user?.role === "Administrator" || user?.role === "Foreman") && (
+                        <button 
+                          className={styles.deleteTaskBtn}
+                          onClick={() => {
+                            if (confirm(`Delete task "${task.title}"?`)) {
+                              deleteTask.mutate(task.id);
+                            }
+                          }}
+                          title="Delete Task"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {/* Photo Gallery Section */}
+                  {viewingPhotosTaskId === task.id && (
+                    <div className={styles.gallerySection}>
+                      <div className={styles.galleryHeader}>
+                        <h4>Completion Proofs</h4>
+                        <button onClick={() => setViewingPhotosTaskId(null)} className={styles.closeBtn}><X size={16}/></button>
+                      </div>
+                      <div className={styles.photoGrid}>
+                        {currentTaskPhotos?.map(photo => (
+                          <div key={photo.id} className={styles.photoCard}>
+                            <img src={`${API_BASE_URL}/${photo.file_path}`} alt="Proof" className={styles.photoThumb} />
+                            {photo.comment && <p className={styles.photoComment}>{photo.comment}</p>}
+                            <span className={styles.photoDate}><FormattedDate date={photo.upload_date} /></span>
+                          </div>
+                        ))}
+                        {currentTaskPhotos?.length === 0 && <p className={styles.noPhotos}>No photos uploaded yet.</p>}
+                      </div>
+                    </div>
+                  )}
+
                   {uploadingTaskId === task.id && (
                     <div className={styles.photoUploadSection}>
                       <h4>Upload Proof of Completion</h4>
@@ -395,13 +501,65 @@ export default function ProjectDetailPage() {
                     </p>
                   </div>
                   {(user?.role === "Administrator" || user?.role === "Foreman") && (
-                    <button className={styles.deductBtn}>Deduct</button>
+                    <button 
+                      className={styles.deductBtn}
+                      onClick={() => setDeductingMaterial(material)}
+                    >
+                      Deduct
+                    </button>
                   )}
                 </div>
               ))}
               {materials?.length === 0 && <p className={styles.emptyMsg}>No materials added yet.</p>}
             </div>
           </section>
+        )}
+
+        {/* Deduction Modal */}
+        {deductingMaterial && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <h3>Deduct Material</h3>
+                <button onClick={() => setDeductingMaterial(null)} className={styles.closeBtn}>
+                  <X size={24} />
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                <p className={styles.modalSubtitle}>
+                  Recording usage for <strong>{deductingMaterial.name}</strong>
+                </p>
+                <div className={styles.inventoryStatus}>
+                  <span>Current Inventory:</span>
+                  <strong>{deductingMaterial.quantity} {deductingMaterial.unit}</strong>
+                </div>
+                <div className={styles.inputGroupLarge}>
+                  <label>Amount used</label>
+                  <div className={styles.inputWrapper}>
+                    <input 
+                      type="number" 
+                      value={deductionAmount}
+                      onChange={(e) => setDeductionAmount(e.target.value)}
+                      placeholder="0.00"
+                      autoFocus
+                    />
+                    <span className={styles.unitBadge}>{deductingMaterial.unit}</span>
+                  </div>
+                </div>
+                <button 
+                  className={styles.confirmDeductBtnLarge}
+                  onClick={() => {
+                    if (deductionAmount && !isNaN(Number(deductionAmount))) {
+                      deductMaterial.mutate({ materialId: deductingMaterial.id, amount: Number(deductionAmount) });
+                    }
+                  }}
+                  disabled={deductMaterial.isPending}
+                >
+                  {deductMaterial.isPending ? "Processing..." : "Confirm Deduction"}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </main>

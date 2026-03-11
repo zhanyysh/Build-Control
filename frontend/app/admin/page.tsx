@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import styles from "./admin.module.css";
 import { UserPlus, Trash2, Shield, User as UserIcon, HardHat } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 interface User {
   id: number;
@@ -26,8 +27,6 @@ export default function AdminPage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Worker");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   if (user && user.role !== "Administrator") {
     router.push("/dashboard");
@@ -43,16 +42,14 @@ export default function AdminPage() {
     mutationFn: (data: any) => api.post("/users/", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      setSuccess("User created successfully!");
+      toast.success("User created successfully!");
       setEmail("");
       setFullName("");
       setPassword("");
       setRole("Worker");
-      setTimeout(() => setSuccess(""), 3000);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Failed to create user");
-      setTimeout(() => setError(""), 3000);
+      toast.error(err.response?.data?.detail || "Failed to create user");
     }
   });
 
@@ -60,6 +57,10 @@ export default function AdminPage() {
     mutationFn: (userId: number) => api.delete(`/users/${userId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("User deleted");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to delete user");
     }
   });
 
@@ -84,9 +85,6 @@ export default function AdminPage() {
                 createUser.mutate({ email, full_name: fullName, password, role });
               }}
             >
-              {error && <p className={styles.error}>{error}</p>}
-              {success && <p className={styles.success}>{success}</p>}
-
               <div className={styles.inputGroup}>
                 <label>Full Name</label>
                 <input 

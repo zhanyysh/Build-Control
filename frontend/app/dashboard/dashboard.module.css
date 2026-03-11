@@ -112,22 +112,56 @@
   gap: 1.5rem;
 }
 
+.projectCardWrapper {
+  position: relative;
+}
+
 .projectCard {
   background: white;
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  height: 100%;
 }
 
 .projectCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
   border-color: #0070f3;
+}
+
+.deleteProjectBtn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: #ffffff;
+  color: #94a3b8;
+  border: 1px solid #f1f5f9;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.projectCardWrapper:hover .deleteProjectBtn {
+  opacity: 1;
+}
+
+.deleteProjectBtn:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+  border-color: #fee2e2;
+  transform: scale(1.1);
 }
 
 .projectName {

@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Default to SQLite for initial development if no DATABASE_URL is provided
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./buildcontrol.db")
+# PostgreSQL URL format: postgresql://user:password@localhost:5432/dbname
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Use check_same_thread only for SQLite
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
-engine = create_engine(DATABASE_URL, echo=True, connect_args=connect_args)
+# Create engine (no SQLite-specific connect_args needed for PostgreSQL)
+engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)

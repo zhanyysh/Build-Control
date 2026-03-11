@@ -137,15 +137,16 @@
 }
 
 .inlineForm {
-  background: white;
+  background-color: #ffffff !important;
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #0070f3;
   margin-bottom: 2rem;
   display: flex;
   gap: 1.5rem;
   align-items: flex-end;
   flex-wrap: wrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .inlineForm .inputGroup {
@@ -170,6 +171,8 @@
   border: 1px solid #d1d5db;
   border-radius: 4px;
   font-size: 0.875rem;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
 }
 
 .submitBtn {
@@ -270,15 +273,15 @@
   border-radius: 6px;
   border: 1px solid #d1d5db;
   font-size: 0.875rem;
-  background-color: white;
-  color: #1e293b;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
   cursor: pointer;
   outline: none;
 }
 
 .statusSelect option {
-  color: #1e293b;
-  background-color: white;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
 }
 
 .statusSelect:focus {
@@ -299,6 +302,122 @@
 .iconBtn:hover {
   background-color: #f3f4f6;
   color: #111827;
+}
+
+.viewPhotosBtn {
+  background-color: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewPhotosBtn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.activePhotosBtn {
+  background-color: #0070f3;
+  color: white;
+  border-color: #0070f3;
+}
+
+.deleteTaskBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.deleteTaskBtn:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.gallerySection {
+  background-color: white;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  margin-top: -1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.galleryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.galleryHeader h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.photoCard {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+  background-color: #f8fafc;
+}
+
+.photoThumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.photoComment {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.photoDate {
+  display: block;
+  padding: 0 0.5rem 0.5rem;
+  font-size: 0.625rem;
+  color: #94a3b8;
+}
+
+.noPhotos {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-style: italic;
 }
 
 .photoUploadSection {
@@ -341,6 +460,8 @@
   border: 1px solid #cbd5e1;
   border-radius: 4px;
   font-size: 0.875rem;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
 }
 
 .materialGrid {
@@ -385,11 +506,158 @@
 
 .deductBtn {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #0070f3;
-  background: none;
+  background-color: #eff6ff;
   border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deductBtn:hover {
+  background-color: #0070f3;
+  color: white;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background-color: #ffffff !important;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScale {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modalHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.modalSubtitle {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.inventoryStatus {
+  background-color: #f8fafc;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border: 1px solid #f1f5f9;
+}
+
+.inventoryStatus span {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.inventoryStatus strong {
+  color: #0f172a;
+}
+
+.inputGroupLarge {
+  margin-bottom: 2rem;
+}
+
+.inputGroupLarge label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.75rem;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.inputWrapper input {
+  flex: 1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  transition: all 0.2s;
+}
+
+.inputWrapper input:focus {
+  outline: none;
+  border-color: #0070f3;
+  box-shadow: 0 0 0 4px rgba(0, 112, 243, 0.1);
+}
+
+.unitBadge {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.confirmDeductBtnLarge {
+  width: 100%;
+  padding: 1rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirmDeductBtnLarge:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.confirmDeductBtnLarge:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .emptyMsg {

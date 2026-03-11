@@ -4,25 +4,26 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/api";
 import styles from "./login.module.css";
+import { toast } from "react-hot-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    const loadingToast = toast.loading("Logging in...");
     try {
       const formData = new FormData();
       formData.append("username", email);
       formData.append("password", password);
-      
+
       const res = await api.post("/token", formData);
+      toast.success("Welcome back!", { id: loadingToast });
       login(res.data.access_token, res.data.role);
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to login");
+      toast.error(err.response?.data?.detail || "Failed to login", { id: loadingToast });
     }
   };
 
@@ -31,10 +32,9 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className={styles.form}>
         <h1 className={styles.title}>BuildControl KR</h1>
         <p className={styles.subtitle}>Login to your account</p>
-        
-        {error && <p className={styles.error}>{error}</p>}
-        
+
         <div className={styles.inputGroup}>
+
           <label htmlFor="email">Email</label>
           <input
             type="email"

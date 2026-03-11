@@ -37,3 +37,21 @@ def update_material_quantity(material_id: int, quantity: float, current_user: Us
     session.commit()
     session.refresh(material)
     return material
+
+@router.post("/{material_id}/deduct", response_model=Material)
+def deduct_material(material_id: int, amount: float, current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
+    if current_user.role not in [UserRole.ADMIN, UserRole.FOREMAN]:
+        raise HTTPException(status_code=403, detail="Only administrators and foremen can deduct materials")
+    
+    material = session.get(Material, material_id)
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    
+    if material.quantity < amount:
+        raise HTTPException(status_code=400, detail="Insufficient material quantity")
+        
+    material.quantity -= amount
+    session.add(material)
+    session.commit()
+    session.refresh(material)
+    return material
