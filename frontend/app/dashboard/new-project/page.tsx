@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import styles from "./new-project.module.css";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { ArrowLeft } from "lucide-react";
 
 export default function NewProjectPage() {
   const { user } = useAuth();
@@ -60,8 +61,6 @@ export default function NewProjectPage() {
           <h1 className={styles.title}>Create New Project</h1>
 
           <div className={styles.inputGroup}>
-...
-
             <label htmlFor="name">Project Name</label>
             <input
               type="text"

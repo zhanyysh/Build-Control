@@ -4,6 +4,9 @@ backend/venv/
 backend/__pycache__/
 backend/.pytest_cache/
 
+export_to_csv.py
+exports/
+
 # Environment files
 .env
 .env.local

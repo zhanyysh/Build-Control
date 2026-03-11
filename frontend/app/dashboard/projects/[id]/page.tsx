@@ -72,6 +72,7 @@ export default function ProjectDetailPage() {
   const [showMaterialForm, setShowMaterialForm] = useState(false);
   const [uploadingTaskId, setUploadingTaskId] = useState<number | null>(null);
   const [viewingPhotosTaskId, setViewingPhotosTaskId] = useState<number | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<PhotoReport | null>(null);
   
   // Material Deduction Modal State
   const [deductingMaterial, setDeductingMaterial] = useState<Material | null>(null);
@@ -395,7 +396,12 @@ export default function ProjectDetailPage() {
                       <div className={styles.photoGrid}>
                         {currentTaskPhotos?.map(photo => (
                           <div key={photo.id} className={styles.photoCard}>
-                            <img src={`${API_BASE_URL}/${photo.file_path}`} alt="Proof" className={styles.photoThumb} />
+                            <img 
+                              src={`${API_BASE_URL}/${photo.file_path}`} 
+                              alt="Proof" 
+                              className={styles.photoThumb} 
+                              onClick={() => setSelectedPhoto(photo)}
+                            />
                             {photo.comment && <p className={styles.photoComment}>{photo.comment}</p>}
                             <span className={styles.photoDate}><FormattedDate date={photo.upload_date} /></span>
                           </div>
@@ -557,6 +563,29 @@ export default function ProjectDetailPage() {
                 >
                   {deductMaterial.isPending ? "Processing..." : "Confirm Deduction"}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Full Screen Photo Modal */}
+        {selectedPhoto && (
+          <div 
+            className={styles.fullScreenOverlay}
+            onClick={() => setSelectedPhoto(null)}
+          >
+            <button className={styles.fullScreenClose}>
+              <X size={32} />
+            </button>
+            <div className={styles.fullScreenImageWrapper}>
+              <img 
+                src={`${API_BASE_URL}/${selectedPhoto.file_path}`} 
+                alt="Full Proof" 
+                className={styles.fullScreenImage}
+              />
+              <div className={styles.fullScreenCaption}>
+                {selectedPhoto.comment && <p>{selectedPhoto.comment}</p>}
+                <span>Uploaded on <FormattedDate date={selectedPhoto.upload_date} /></span>
               </div>
             </div>
           </div>
