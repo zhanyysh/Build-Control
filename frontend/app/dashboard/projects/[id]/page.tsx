@@ -46,6 +46,12 @@ interface Project {
   description: string;
 }
 
+interface User {
+  id: number;
+  full_name: string;
+  role: string;
+}
+
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -59,11 +65,19 @@ export default function ProjectDetailPage() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
   const [taskDeadline, setTaskDeadline] = useState("");
+  const [taskWorkerId, setTaskWorkerId] = useState("");
   const [materialName, setMaterialName] = useState("");
   const [materialQty, setMaterialQty] = useState("");
   const [materialUnit, setMaterialUnit] = useState("");
   const [photoComment, setPhotoComment] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Data fetching
+  const { data: users } = useQuery<User[]>({
+    queryKey: ["users"],
+    queryFn: () => api.get("/users/").then((res) => res.data),
+    enabled: user?.role === "Administrator" || user?.role === "Foreman",
+  });
 
   // Mutations
   const addTask = useMutation({
@@ -74,6 +88,7 @@ export default function ProjectDetailPage() {
       setTaskTitle("");
       setTaskDesc("");
       setTaskDeadline("");
+      setTaskWorkerId("");
     }
   });
 
@@ -201,13 +216,23 @@ export default function ProjectDetailPage() {
                     title: taskTitle,
                     description: taskDesc,
                     deadline: taskDeadline,
-                    project_id: Number(id)
+                    project_id: Number(id),
+                    worker_id: taskWorkerId ? Number(taskWorkerId) : null
                   });
                 }}
               >
                 <div className={styles.inputGroup}>
                   <label>Task Title</label>
                   <input value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} required />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Assign Worker</label>
+                  <select value={taskWorkerId} onChange={(e) => setTaskWorkerId(e.target.value)}>
+                    <option value="">Unassigned</option>
+                    {users?.filter(u => u.role !== "Administrator").map(u => (
+                      <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>
+                    ))}
+                  </select>
                 </div>
                 <div className={styles.inputGroup}>
                   <label>Deadline</label>
@@ -242,7 +267,13 @@ export default function ProjectDetailPage() {
                         <p className={styles.taskDesc}>{task.description}</p>
                         <div className={styles.taskMeta}>
                           <span>Deadline: <FormattedDate date={task.deadline} /></span>
-                          {task.worker_id && <span className={styles.workerBadge}>Assigned</span>}
+                          {task.worker_id ? (
+                            <span className={styles.workerBadge}>
+                              {users?.find(u => u.id === task.worker_id)?.full_name || "Assigned"}
+                            </span>
+                          ) : (
+                            <span className={styles.unassignedBadge}>Unassigned</span>
+                          )}
                         </div>
                       </div>
                     </div>

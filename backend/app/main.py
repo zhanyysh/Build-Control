@@ -13,7 +13,7 @@ from app.core.auth import verify_password, get_password_hash, create_access_toke
 from app.api.deps import get_current_user
 
 # Import routers
-from app.api import projects, tasks, materials, photos
+from app.api import projects, tasks, materials, photos, users
 
 app = FastAPI(title="BuildControl KR API", version="0.1.0")
 
@@ -44,6 +44,7 @@ app.include_router(projects.router)
 app.include_router(tasks.router)
 app.include_router(materials.router)
 app.include_router(photos.router)
+app.include_router(users.router)
 
 @app.on_event("startup")
 def on_startup():
