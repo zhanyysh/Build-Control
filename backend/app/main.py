@@ -17,14 +17,6 @@ from app.api import projects, tasks, materials, photos, users
 
 app = FastAPI(title="BuildControl KR API", version="0.1.0")
 
-# Ensure uploads directory exists
-UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-
-# Serve static files
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
 # CORS Configuration
 origins = ["*"]
 

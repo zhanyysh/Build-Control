@@ -397,11 +397,12 @@ export default function ProjectDetailPage() {
                         {currentTaskPhotos?.map(photo => (
                           <div key={photo.id} className={styles.photoCard}>
                             <img 
-                              src={`${API_BASE_URL}/${photo.file_path}`} 
+                              src={photo.file_path.startsWith("http") ? photo.file_path : `${API_BASE_URL}/${photo.file_path}`} 
                               alt="Proof" 
                               className={styles.photoThumb} 
                               onClick={() => setSelectedPhoto(photo)}
                             />
+
                             {photo.comment && <p className={styles.photoComment}>{photo.comment}</p>}
                             <span className={styles.photoDate}><FormattedDate date={photo.upload_date} /></span>
                           </div>
@@ -579,10 +580,11 @@ export default function ProjectDetailPage() {
             </button>
             <div className={styles.fullScreenImageWrapper}>
               <img 
-                src={`${API_BASE_URL}/${selectedPhoto.file_path}`} 
+                src={selectedPhoto.file_path.startsWith("http") ? selectedPhoto.file_path : `${API_BASE_URL}/${selectedPhoto.file_path}`} 
                 alt="Full Proof" 
                 className={styles.fullScreenImage}
               />
+
               <div className={styles.fullScreenCaption}>
                 {selectedPhoto.comment && <p>{selectedPhoto.comment}</p>}
                 <span>Uploaded on <FormattedDate date={selectedPhoto.upload_date} /></span>

@@ -1,6 +1,6 @@
 import os
-import uuid
-import io
+import cloudinary
+import cloudinary.uploader
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlmodel import Session, select
 from typing import List
@@ -8,18 +8,20 @@ from datetime import datetime
 from app.db.database import get_session
 from app.models.models import PhotoReport, Task, User, UserRole
 from app.api.deps import get_current_user
-from PIL import Image
 from pillow_heif import register_heif_opener
 
 # Register HEIF opener for Pillow to support iPhone photos
 register_heif_opener()
 
-router = APIRouter(prefix="/photos", tags=["photos"])
+# Cloudinary Configuration
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True
+)
 
-# Directory for storing uploaded photos
-UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
+router = APIRouter(prefix="/photos", tags=["photos"])
 
 @router.post("/upload", response_model=PhotoReport)
 async def upload_photo(
@@ -39,30 +41,22 @@ async def upload_photo(
         raise HTTPException(status_code=403, detail="Not authorized to upload photos for this task")
     
     try:
-        # Read file content
-        content = await file.read()
+        # Upload directly to Cloudinary
+        # We don't need to process the image with Pillow ourselves; 
+        # Cloudinary handles conversion and optimization.
+        upload_result = cloudinary.uploader.upload(
+            file.file,
+            folder="buildcontrol_kr",
+            resource_type="image"
+        )
         
-        # Open image with Pillow
-        image = Image.open(io.BytesIO(content))
-        
-        # Define filename (always convert to .jpg for browser compatibility)
-        unique_filename = f"{uuid.uuid4()}.jpg"
-        file_path = os.path.join(UPLOAD_DIR, unique_filename)
-        
-        # Convert to RGB (required for saving as JPEG if source is RGBA or other)
-        if image.mode in ("RGBA", "P"):
-            image = image.convert("RGB")
-            
-        # Save as optimized JPEG
-        image.save(file_path, "JPEG", quality=85, optimize=True)
-
-        # Create record (store relative path for frontend serving)
-        db_file_path = f"uploads/{unique_filename}"
+        # Get the secure URL from Cloudinary
+        file_url = upload_result.get("secure_url")
         
         photo_report = PhotoReport(
             task_id=task_id,
             comment=comment,
-            file_path=db_file_path,
+            file_path=file_url,  # Store the full Cloudinary URL
             upload_date=datetime.utcnow()
         )
         
@@ -73,8 +67,8 @@ async def upload_photo(
         return photo_report
         
     except Exception as e:
-        print(f"Error processing image: {e}")
-        raise HTTPException(status_code=400, detail=f"Invalid image format or processing error: {str(e)}")
+        print(f"Error uploading to Cloudinary: {e}")
+        raise HTTPException(status_code=400, detail=f"Upload failed: {str(e)}")
 
 @router.get("/{task_id}", response_model=List[PhotoReport])
 def read_task_photos(

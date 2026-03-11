@@ -10,3 +10,4 @@ httpx==0.27.0
 python-dotenv==1.0.1
 Pillow==10.2.0
 pillow-heif==0.15.0
+cloudinary==1.38.0
