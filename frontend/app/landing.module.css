@@ -1,0 +1,253 @@
+.container {
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+  background-color: #ffffff;
+}
+
+.nav {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0070f3;
+  letter-spacing: -0.025em;
+}
+
+.loginBtn {
+  background-color: #0070f3;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 112, 243, 0.2);
+}
+
+.loginBtn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4rem;
+}
+
+.heroContent {
+  flex: 1.2;
+}
+
+.heroTitle {
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+}
+
+.heroTitle span {
+  display: block;
+  color: #0070f3;
+  background: linear-gradient(90deg, #0070f3, #0ea5e9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 3rem;
+  max-width: 540px;
+}
+
+.ctaGroup {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryBtn {
+  background-color: #0f172a;
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1);
+}
+
+.primaryBtn:hover {
+  transform: translateY(-2px);
+  background-color: #1e293b;
+}
+
+.secondaryBtn {
+  color: #475569;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.secondaryBtn:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.heroImage {
+  flex: 0.8;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.heroImage::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(0, 112, 243, 0.1) 0%, transparent 70%);
+  z-index: -1;
+}
+
+.features {
+  background-color: #f8fafc;
+  padding: 8rem 1.5rem;
+  border-radius: 40px 40px 0 0;
+}
+
+.sectionHeader {
+  max-width: 800px;
+  margin: 0 auto 5rem;
+  text-align: center;
+}
+
+.sectionHeader h2 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1.25rem;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+}
+
+.sectionHeader p {
+  font-size: 1.25rem;
+  color: #64748b;
+}
+
+.featureGrid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.featureCard {
+  background: white;
+  padding: 3rem 2.5rem;
+  border-radius: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+  border: 1px solid #f1f5f9;
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: #e2e8f0;
+}
+
+.featureIcon {
+  background-color: #eff6ff;
+  color: #0070f3;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.featureCard h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.featureCard p {
+  color: #64748b;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.footer {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  background-color: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 1024px) {
+  .heroTitle {
+    font-size: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 6rem 1.5rem;
+  }
+  
+  .heroTitle {
+    font-size: 3rem;
+  }
+  
+  .heroImage {
+    display: none;
+  }
+  
+  .heroSubtitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .ctaGroup {
+    justify-content: center;
+  }
+}
