@@ -9,6 +9,7 @@ import { Plus, Building2, CheckCircle2, ListTodo, Package, Trash2 } from "lucide
 import Link from "next/link";
 import FormattedDate from "@/components/FormattedDate";
 import { toast } from "react-hot-toast";
+import SystemOwnerDashboard from "./SystemOwnerDashboard";
 
 interface Stats {
   project_count: number;
@@ -33,13 +34,13 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
     queryKey: ["stats"],
     queryFn: () => api.get("/stats").then((res) => res.data),
-    enabled: !!user,
+    enabled: !!user && user.role !== "System Administrator",
   });
 
   const { data: projects, isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => api.get("/projects/").then((res) => res.data),
-    enabled: !!user,
+    enabled: !!user && user.role !== "System Administrator",
   });
 
   const deleteProject = useMutation({
@@ -54,7 +55,7 @@ export default function DashboardPage() {
     }
   });
 
-  if (authLoading || statsLoading || projectsLoading) {
+  if (authLoading) {
     return <div className={styles.loading}>Loading Dashboard...</div>;
   }
 
@@ -65,9 +66,13 @@ export default function DashboardPage() {
       <Navbar />
       
       <div className={styles.content}>
-        <header className={styles.header}>
+        {user.role === "System Administrator" ? (
+          <SystemOwnerDashboard />
+        ) : (
+          <>
+            <header className={styles.header}>
           <h1 className={styles.title}>Dashboard</h1>
-          {user.role === "Administrator" && (
+          {(user.role === "Administrator" || user.role === "System Administrator") && (
             <Link href="/dashboard/new-project" className={styles.addButton}>
               <Plus size={20} />
               <span>New Project</span>
@@ -130,7 +135,7 @@ export default function DashboardPage() {
                     <span>Ends: <FormattedDate date={project.end_date} /></span>
                   </div>
                 </Link>
-                {user.role === "Administrator" && (
+                {(user.role === "Administrator" || user.role === "System Administrator") && (
                   <button 
                     className={styles.deleteProjectBtn}
                     onClick={() => {
@@ -148,13 +153,15 @@ export default function DashboardPage() {
             {projects?.length === 0 && (
               <div className={styles.emptyState}>
                 <p>No active projects found.</p>
-                {user.role === "Administrator" && (
+                {(user.role === "Administrator" || user.role === "System Administrator") && (
                   <Link href="/dashboard/new-project">Create your first project</Link>
                 )}
               </div>
             )}
           </div>
         </section>
+          </>
+        )}
       </div>
     </main>
   );

@@ -21,7 +21,7 @@ export default function NewProjectPage() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user && user.role !== "Administrator") {
+  if (user && !["Administrator", "System Administrator"].includes(user.role)) {
     router.push("/dashboard");
     return null;
   }

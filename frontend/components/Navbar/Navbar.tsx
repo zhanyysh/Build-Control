@@ -22,7 +22,7 @@ export default function Navbar() {
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
           </Link>
-          {user.role === "Administrator" && (
+          {(user.role === "Administrator" || user.role === "System Administrator") && (
             <Link href="/admin" className={styles.link}>
               <UserIcon size={20} />
               <span>Admin</span>

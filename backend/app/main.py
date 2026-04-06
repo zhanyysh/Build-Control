@@ -8,12 +8,12 @@ from typing import List
 import os
 
 from app.db.database import create_db_and_tables, get_session, engine
-from app.models.models import User, UserRole, UserBase, UserRead, Project, Task, TaskStatus
+from app.models.models import User, UserRole, UserBase, UserRead, Project, Task, TaskStatus, Company
 from app.core.auth import verify_password, get_password_hash, create_access_token
 from app.api.deps import get_current_user
 
 # Import routers
-from app.api import projects, tasks, materials, photos, users
+from app.api import projects, tasks, materials, photos, users, companies
 
 app = FastAPI(title="BuildControl KR API", version="0.1.0")
 
@@ -34,20 +34,31 @@ app.include_router(tasks.router)
 app.include_router(materials.router)
 app.include_router(photos.router)
 app.include_router(users.router)
+app.include_router(companies.router)
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
-    # Create an initial admin user if not exists
+    from app.models.models import Company
+    # Create an initial admin user and company if not exists
     with Session(engine) as session:
+        statement = select(Company).where(Company.name == "System Architecture Company")
+        company = session.exec(statement).first()
+        if not company:
+            company = Company(name="System Architecture Company")
+            session.add(company)
+            session.commit()
+            session.refresh(company)
+
         statement = select(User).where(User.email == "admin@example.com")
         admin = session.exec(statement).first()
         if not admin:
             hashed_pw = get_password_hash("admin123")
             admin_user = User(
                 email="admin@example.com",
-                full_name="System Admin",
-                role=UserRole.ADMIN,
+                full_name="System Owner",
+                role=UserRole.SYSTEM_ADMIN,
+                company_id=company.id,
                 hashed_password=hashed_pw
             )
             session.add(admin_user)
@@ -75,9 +86,24 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 
 @app.get("/stats")
 async def get_stats(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    project_count = session.exec(select(func.count(Project.id))).one()
-    task_count = session.exec(select(func.count(Task.id))).one()
-    completed_tasks = session.exec(select(func.count(Task.id)).where(Task.status == TaskStatus.COMPLETED)).one()
+    if current_user.role == UserRole.SYSTEM_ADMIN:
+        company_count = session.exec(select(func.count(Company.id))).one()
+        user_count = session.exec(select(func.count(User.id))).one()
+        project_count = session.exec(select(func.count(Project.id))).one()
+        return {
+            "company_count": company_count,
+            "user_count": user_count,
+            "project_count": project_count
+        }
+
+    statement_projects = select(func.count(Project.id)).where(Project.company_id == current_user.company_id)
+    project_count = session.exec(statement_projects).one()
+    
+    statement_tasks = select(func.count(Task.id)).join(Project).where(Project.company_id == current_user.company_id)
+    task_count = session.exec(statement_tasks).one()
+    
+    statement_completed = select(func.count(Task.id)).join(Project).where(Project.company_id == current_user.company_id).where(Task.status == TaskStatus.COMPLETED)
+    completed_tasks = session.exec(statement_completed).one()
     
     return {
         "project_count": project_count,

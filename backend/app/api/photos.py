@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 from typing import List
 from datetime import datetime
 from app.db.database import get_session
-from app.models.models import PhotoReport, Task, User, UserRole
+from app.models.models import PhotoReport, Task, User, UserRole, Project
 from app.api.deps import get_current_user
 from pillow_heif import register_heif_opener
 
@@ -35,6 +35,11 @@ async def upload_photo(
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+        
+    project = session.get(Project, task.project_id)
+    if current_user.role != UserRole.SYSTEM_ADMIN:
+        if not project or project.company_id != current_user.company_id:
+            raise HTTPException(status_code=404, detail="Task not found")
 
     # Authorization check
     if current_user.role == UserRole.WORKER and task.worker_id != current_user.id:
@@ -76,5 +81,14 @@ def read_task_photos(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
+    task = session.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    project = session.get(Project, task.project_id)
+    if current_user.role != UserRole.SYSTEM_ADMIN:
+        if not project or project.company_id != current_user.company_id:
+            raise HTTPException(status_code=404, detail="Task not found")
+
     photos = session.exec(select(PhotoReport).where(PhotoReport.task_id == task_id)).all()
     return photos

@@ -6,7 +6,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar/Navbar";
 import styles from "./admin.module.css";
-import { UserPlus, Trash2, Shield, User as UserIcon, HardHat } from "lucide-react";
+import { UserPlus, Trash2, Shield, User as UserIcon, HardHat, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -15,6 +15,12 @@ interface User {
   email: string;
   full_name: string;
   role: string;
+  company_id: number;
+}
+
+interface Company {
+  id: number;
+  name: string;
 }
 
 export default function AdminPage() {
@@ -22,20 +28,32 @@ export default function AdminPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  // Form state
+  // User Form state
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Worker");
+  const [companyId, setCompanyId] = useState("");
+  
+  // Company Form state
+  const [companyName, setCompanyName] = useState("");
 
-  if (user && user.role !== "Administrator") {
+  if (user && !["Administrator", "System Administrator"].includes(user.role)) {
     router.push("/dashboard");
     return null;
   }
 
-  const { data: users, isLoading } = useQuery<User[]>({
+  const isSystemAdmin = user?.role === "System Administrator";
+
+  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: () => api.get("/users/").then((res) => res.data),
+  });
+
+  const { data: companies, isLoading: companiesLoading } = useQuery<Company[]>({
+    queryKey: ["companies"],
+    queryFn: () => api.get("/companies/").then((res) => res.data),
+    enabled: isSystemAdmin, // Only load companies for system admins
   });
 
   const createUser = useMutation({
@@ -47,6 +65,7 @@ export default function AdminPage() {
       setFullName("");
       setPassword("");
       setRole("Worker");
+      setCompanyId("");
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.detail || "Failed to create user");
@@ -64,14 +83,58 @@ export default function AdminPage() {
     }
   });
 
+  const createCompany = useMutation({
+    mutationFn: (data: any) => api.post("/companies/", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      toast.success("Company created successfully!");
+      setCompanyName("");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.detail || "Failed to create company");
+    }
+  });
+
   return (
     <main className={styles.main}>
       <Navbar />
       <div className={styles.content}>
-        <h1 className={styles.title}>User Management</h1>
+        <h1 className={styles.title}>System Control Panel</h1>
 
         <div className={styles.grid}>
-          {/* Create User Form */}
+          {isSystemAdmin && (
+            <section className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                <Building2 size={20} />
+                <span>Create Client Company</span>
+              </h2>
+              <form 
+                className={styles.form}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createCompany.mutate({ name: companyName });
+                }}
+              >
+                <div className={styles.inputGroup}>
+                  <label>Company Name</label>
+                  <input 
+                    value={companyName} 
+                    onChange={(e) => setCompanyName(e.target.value)} 
+                    required 
+                    placeholder="Stark Industries"
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  className={styles.submitBtn}
+                  disabled={createCompany.isPending}
+                >
+                  {createCompany.isPending ? "Creating..." : "Create Company"}
+                </button>
+              </form>
+            </section>
+          )}
+
           <section className={styles.card}>
             <h2 className={styles.cardTitle}>
               <UserPlus size={20} />
@@ -82,7 +145,11 @@ export default function AdminPage() {
               className={styles.form}
               onSubmit={(e) => {
                 e.preventDefault();
-                createUser.mutate({ email, full_name: fullName, password, role });
+                const payload: any = { email, full_name: fullName, password, role };
+                if (isSystemAdmin) {
+                  payload.company_id = Number(companyId);
+                }
+                createUser.mutate(payload);
               }}
             >
               <div className={styles.inputGroup}>
@@ -120,11 +187,27 @@ export default function AdminPage() {
               <div className={styles.inputGroup}>
                 <label>Role</label>
                 <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="Administrator">Administrator</option>
+                  {isSystemAdmin && <option value="Administrator">Administrator</option>}
                   <option value="Foreman">Foreman</option>
                   <option value="Worker">Worker</option>
                 </select>
               </div>
+
+              {isSystemAdmin && (
+                <div className={styles.inputGroup}>
+                  <label>Assign to Company</label>
+                  <select 
+                    value={companyId} 
+                    onChange={(e) => setCompanyId(e.target.value)} 
+                    required
+                  >
+                    <option value="">Select a Company...</option>
+                    {companies?.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <button 
                 type="submit" 
@@ -136,28 +219,35 @@ export default function AdminPage() {
             </form>
           </section>
 
-          {/* User List */}
-          <section className={styles.card}>
+          <section className={styles.card} style={{ gridColumn: "1 / -1" }}>
             <h2 className={styles.cardTitle}>
               <UserIcon size={20} />
-              <span>System Users</span>
+              <span>{isSystemAdmin ? "Global System Users" : "Company Users"}</span>
             </h2>
             
             <div className={styles.userList}>
-              {isLoading ? (
+              {usersLoading ? (
                 <p>Loading users...</p>
               ) : (
                 users?.map((u) => (
                   <div key={u.id} className={styles.userItem}>
                     <div className={styles.userAvatar}>
-                      {u.role === "Administrator" ? <Shield size={20} /> : 
+                      {u.role === "System Administrator" ? <Shield size={20} color="red" /> : 
+                       u.role === "Administrator" ? <Shield size={20} /> : 
                        u.role === "Foreman" ? <HardHat size={20} /> : 
                        <UserIcon size={20} />}
                     </div>
                     <div className={styles.userInfo}>
-                      <p className={styles.userName}>{u.full_name}</p>
+                      <span style={{display: "flex", gap: "10px", alignItems: "center"}}>
+                        <p className={styles.userName}>{u.full_name}</p>
+                        {isSystemAdmin && (
+                          <span style={{fontSize: "0.8rem", color: "var(--text-muted)", background: "var(--surface)", padding: "2px 6px", borderRadius: "var(--radius-sm)"}}>
+                            Company #{u.company_id}
+                          </span>
+                        )}
+                      </span>
                       <p className={styles.userEmail}>{u.email}</p>
-                      <span className={`${styles.roleBadge} ${styles[u.role.toLowerCase()]}`}>
+                      <span className={`${styles.roleBadge} ${styles[u.role.toLowerCase().replace(" ", "-")]}`}>
                         {u.role}
                       </span>
                     </div>

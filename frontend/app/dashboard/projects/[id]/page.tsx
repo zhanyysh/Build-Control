@@ -93,7 +93,7 @@ export default function ProjectDetailPage() {
   const { data: users } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: () => api.get("/users/").then((res) => res.data),
-    enabled: user?.role === "Administrator" || user?.role === "Foreman",
+    enabled: user?.role === "Administrator" || user?.role === "System Administrator" || user?.role === "Foreman",
   });
 
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
@@ -261,7 +261,7 @@ export default function ProjectDetailPage() {
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Project Tasks</h2>
-              {(user?.role === "Administrator" || user?.role === "Foreman") && (
+              {(user?.role === "Administrator" || user?.role === "System Administrator" || user?.role === "Foreman") && (
                 <button 
                   className={styles.addButton}
                   onClick={() => setShowTaskForm(!showTaskForm)}
@@ -294,7 +294,7 @@ export default function ProjectDetailPage() {
                   <label>Assign Worker</label>
                   <select value={taskWorkerId} onChange={(e) => setTaskWorkerId(e.target.value)}>
                     <option value="">Unassigned</option>
-                    {users?.filter(u => u.role !== "Administrator").map(u => (
+                    {users?.filter(u => !["Administrator", "System Administrator"].includes(u.role)).map(u => (
                       <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>
                     ))}
                   </select>
@@ -370,7 +370,7 @@ export default function ProjectDetailPage() {
                         <Camera size={18} />
                       </button>
                       
-                      {(user?.role === "Administrator" || user?.role === "Foreman") && (
+                      {(user?.role === "Administrator" || user?.role === "System Administrator" || user?.role === "Foreman") && (
                         <button 
                           className={styles.deleteTaskBtn}
                           onClick={() => {
@@ -455,7 +455,7 @@ export default function ProjectDetailPage() {
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>Inventory</h2>
-              {(user?.role === "Administrator" || user?.role === "Foreman") && (
+              {(user?.role === "Administrator" || user?.role === "System Administrator" || user?.role === "Foreman") && (
                 <button 
                   className={styles.addButton}
                   onClick={() => setShowMaterialForm(!showMaterialForm)}
@@ -507,7 +507,7 @@ export default function ProjectDetailPage() {
                       {material.quantity} {material.unit}
                     </p>
                   </div>
-                  {(user?.role === "Administrator" || user?.role === "Foreman") && (
+                  {(user?.role === "Administrator" || user?.role === "System Administrator" || user?.role === "Foreman") && (
                     <button 
                       className={styles.deductBtn}
                       onClick={() => setDeductingMaterial(material)}
